@@ -692,8 +692,10 @@ function shutdown(): void {
   if (shuttingDown) return
   shuttingDown = true
   process.stderr.write('telegram channel: shutting down\n')
-  // bot.stop() signals the poll loop to end; the current getUpdates request
-  // may take up to its long-poll timeout to return. Force-exit after 2s.
+  // bot.api.close() releases the polling connection slot immediately so a new
+  // session starting up won't hit a 409 Conflict zombie window.
+  // bot.stop() then signals the poll loop to end; force-exit after 2s.
+  void bot.api.close()
   setTimeout(() => process.exit(0), 2000)
   void Promise.resolve(bot.stop()).finally(() => process.exit(0))
 }
